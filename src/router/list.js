@@ -21,7 +21,7 @@ const _router = [
   },
   {
     name: ROUTER_NAME.POST,
-    path: '/post/:id/:autho',
+    path: '/post/:id/:author',
     component: lazy(() => import('./../page/Post'))
   }
 ]
@@ -49,5 +49,3 @@ const getRouterWithPathMatch = () => {
 }
 
 export const router = getRouterWithPathMatch()
-
-console.log(router)

@@ -7,14 +7,31 @@ export const Home = () => {
   return (
     <>
       <h1>Home page</h1>
-      <button onClick={() => goTo(ROUTER_NAME.REMEDIAL_ACTION_RESPONSE)}>
-        Go to Remedial action response page
-      </button>
-      <button
-        onClick={() => goToWithPath(ROUTER_NAME.REMEDIAL_ACTION_RESPONSE)}
-      >
-        Go to Remedial action response page with path
-      </button>
+      <ul>
+        <li>
+          <Link to={ROUTER_NAME.REMEDIAL_ACTION_RESPONSE} noUrl>
+            Remedial action response page, no params, no query, no url
+          </Link>
+        </li>
+
+        <li>
+          <Link
+            to={ROUTER_NAME.REMEDIAL_ACTION_RESPONSE}
+            query={{ greating: 'hello' }}
+          >
+            Remedial action response page, has url, no params, has query
+          </Link>
+        </li>
+
+        <li>
+          <Link
+            to={ROUTER_NAME.REMEDIAL_ACTION_RESPONSE}
+            params={{ id: 123456 }}
+          >
+            Remedial action response page, has url, has params (optional)
+          </Link>
+        </li>
+      </ul>
       <button
         onClick={() =>
           goToWithPath(ROUTER_NAME.POST, {
@@ -36,7 +53,7 @@ export const Home = () => {
           goToWithPath(ROUTER_NAME.POST, {
             params: {
               id: 10,
-              autho: 'my kingdom'
+              author: 'my kingdom'
             },
             query: {
               keyword: 'ahi',
@@ -53,7 +70,7 @@ export const Home = () => {
       |{' '}
       <Link
         to={ROUTER_NAME.POST}
-        params={{ id: 10, autho: 'my kingdom' }}
+        params={{ id: 10, author: 'my kingdom' }}
         query={{ page: 9 }}
       >
         Go to POST page with path (okela case) với thẻ Link

@@ -60,7 +60,7 @@ const fillValueToPathParamsUrl = (path, params) => {
     // fill value to each params (for optional params first)
     for (let key in params) {
       if (params.hasOwnProperty(key)) {
-        const strParamsRegex = `/\?:${key}`
+        const strParamsRegex = `/[\?]{1}:${key}`
         newPath = newPath.replace(new RegExp(strParamsRegex), `/${params[key]}`)
       }
     }
@@ -72,6 +72,19 @@ const fillValueToPathParamsUrl = (path, params) => {
         newPath = newPath.replace(new RegExp(strParamsRegex), `/${params[key]}`)
       }
     }
+  }
+
+  return newPath
+}
+
+const removeOptionalParamsMissedInPropsAfterFillDataAndGetNewPath = newPath => {
+  const restOptionals = newPath.match(/\/\?:([^/:])+/g)
+  const totalRestOptionals = restOptionals ? restOptionals.length : 0
+
+  if (totalRestOptionals) {
+    const index = newPath.indexOf(restOptionals[0])
+
+    return newPath.substr(0, index)
   }
 
   return newPath
@@ -95,11 +108,14 @@ const checkIsRequiredParamsWasMissed = newPath => {
 
   if (isInvalid) {
     const listOfMissed = newPath.match(/:[^\/:]+/g)
-    const errorMessage = `Navigation was missed required params: ${listOfMissed.join(
-      ', '
-    )}`
 
-    console.error(errorMessage)
+    if (listOfMissed) {
+      const errorMessage = `Navigation was missing required params: ${listOfMissed.join(
+        ', '
+      )}`
+
+      console.error(errorMessage)
+    }
   }
 
   return isInvalid
@@ -118,6 +134,8 @@ export const getAndFillDataToNewPath = (path, payload) => {
   if (isMissedParams) {
     isValidPath = false
   }
+
+  newPath = removeOptionalParamsMissedInPropsAfterFillDataAndGetNewPath(newPath)
 
   // fill queries value
   if (payload.query) {

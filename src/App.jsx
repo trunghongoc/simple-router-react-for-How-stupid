@@ -7,7 +7,6 @@ import { Index } from './page/Index'
 
 function App() {
   const initialRoute = getInitialRoute()
-  console.log({ initialRoute })
   // keep key name exactly like this
   const [currentRouterName, setCurrentRouterName] = useState(initialRoute.name)
 

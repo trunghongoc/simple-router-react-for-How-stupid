@@ -31,7 +31,7 @@ export const Link = ({
   }
 
   return (
-    <a onClick={handleOnClick} href={newPath} {...props}>
+    <a onClick={handleOnClick} href={noUrl ? '/#' : newPath} {...props}>
       {children}
     </a>
   )
