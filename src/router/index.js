@@ -2,7 +2,7 @@ import { useMemo, useContext, Suspense } from 'react'
 
 import { RouterContext } from './../context/routerContext'
 import { ROUTER_NAME } from './name'
-import { router } from './list'
+import { router, firstRoute } from './list'
 
 const findRoute = pageName => {
   if (!pageName || typeof pageName !== 'string') {
@@ -10,6 +10,14 @@ const findRoute = pageName => {
   }
 
   return router.find(route => route.name === pageName)
+}
+
+const findRouteByPath = path => {
+  if (!path || typeof path !== 'string') {
+    return null
+  }
+
+  return router.find(route => route.path === path)
 }
 
 export const useRenderPageByRouter = () => {
@@ -51,21 +59,39 @@ export const useRouter = () => {
     return route
   }, [routerContext.currentRouterName])
 
-  const goTo = routeName => {
+  const checkIsGoToRightPage = routeName => {
     const isSameCurrentRouter = routeName === routerContext.currentRouterName
 
     if (isSameCurrentRouter) {
-      return
+      return false
     }
 
     const route = findRoute(routeName)
 
     if (!route) {
-      return
+      return false
     }
 
-    if (routerContext.setCurrentRouterName) {
+    return route
+  }
+
+  const goTo = routeName => {
+    const route = checkIsGoToRightPage(routeName)
+
+    if (route && routerContext.setCurrentRouterName) {
       routerContext.setCurrentRouterName(routeName)
+    }
+  }
+
+  const goToWithPath = routeName => {
+    const route = checkIsGoToRightPage(routeName)
+
+    if (route && routerContext.setCurrentRouterName) {
+      routerContext.setCurrentRouterName(routeName)
+
+      if (route.path) {
+        window.history.pushState({}, null, route.path)
+      }
     }
   }
 
@@ -73,6 +99,14 @@ export const useRouter = () => {
     currentRoute,
     ROUTER_NAME,
     findRoute,
-    goTo
+    goTo,
+    goToWithPath
   }
+}
+
+export const getInitialRoute = () => {
+  const pathName = window.location.pathname
+  const route = findRouteByPath(pathName) || firstRoute
+
+  return route
 }

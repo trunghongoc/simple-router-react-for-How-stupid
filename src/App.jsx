@@ -1,13 +1,15 @@
 import { useState } from 'react'
 
 import { RouterContext } from './context/routerContext'
-import { firstRoute } from './router/list'
+import { getInitialRoute } from './router'
 
 import { Index } from './page/Index'
 
 function App() {
+  const initialRoute = getInitialRoute()
+  console.log({ initialRoute })
   // keep key name exactly like this
-  const [currentRouterName, setCurrentRouterName] = useState(firstRoute.name)
+  const [currentRouterName, setCurrentRouterName] = useState(initialRoute.name)
 
   return (
     <>
