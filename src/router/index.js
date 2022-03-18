@@ -4,7 +4,9 @@ import { RouterContext } from './../context/routerContext'
 import { ROUTER_NAME } from './name'
 import { router, firstRoute } from './list'
 
-const findRoute = pageName => {
+import { serialize } from './helper'
+
+export const findRoute = pageName => {
   if (!pageName || typeof pageName !== 'string') {
     return null
   }
@@ -17,7 +19,7 @@ const findRouteByPath = path => {
     return null
   }
 
-  return router.find(route => route.path === path)
+  return router.find(route => route.pathRegex.test(path))
 }
 
 export const useRenderPageByRouter = () => {
@@ -48,6 +50,81 @@ export const useRenderPageByRouter = () => {
       <Suspense fallback={null}>{CurrentPage}</Suspense>
     </>
   )
+}
+
+const fillValueToPathParamsUrl = (path, params) => {
+  let newPath = path
+
+  // Check is plain object
+  if (params && typeof params === 'object' && !Array.isArray(params)) {
+    // fill value to each params (for optional params first)
+    for (let key in params) {
+      if (params.hasOwnProperty(key)) {
+        const strParamsRegex = `/\?:${key}`
+        newPath = newPath.replace(new RegExp(strParamsRegex), `/${params[key]}`)
+      }
+    }
+
+    // fill value to each params (for required params second)
+    for (let key in params) {
+      if (params.hasOwnProperty(key)) {
+        const strParamsRegex = `/:${key}`
+        newPath = newPath.replace(new RegExp(strParamsRegex), `/${params[key]}`)
+      }
+    }
+  }
+
+  return newPath
+}
+
+const fillQueriesStringToPathUrl = (newPath, queriesObj) => {
+  const isObj =
+    queriesObj && typeof queriesObj === 'object' && !Array.isArray(queriesObj)
+
+  const queries = isObj ? `?${serialize(queriesObj)}` : ''
+
+  return newPath + queries
+}
+
+const checkIsRequiredParamsWasMissed = newPath => {
+  let isInvalid = false
+
+  if (newPath.indexOf('/:') > -1) {
+    isInvalid = true
+  }
+
+  if (isInvalid) {
+    const listOfMissed = newPath.match(/:[^\/:]+/g)
+    const errorMessage = `Navigation was missed required params: ${listOfMissed.join(
+      ', '
+    )}`
+
+    console.error(errorMessage)
+  }
+
+  return isInvalid
+}
+
+export const getAndFillDataToNewPath = (path, payload) => {
+  let isValidPath = true
+  let newPath = path
+
+  // fill params value
+  if (payload && payload.params) {
+    newPath = fillValueToPathParamsUrl(newPath, payload.params)
+  }
+
+  const isMissedParams = checkIsRequiredParamsWasMissed(newPath)
+  if (isMissedParams) {
+    isValidPath = false
+  }
+
+  // fill queries value
+  if (payload.query) {
+    newPath = fillQueriesStringToPathUrl(newPath, payload.query)
+  }
+
+  return { isValidPath, newPath }
 }
 
 export const useRouter = () => {
@@ -83,14 +160,21 @@ export const useRouter = () => {
     }
   }
 
-  const goToWithPath = routeName => {
+  const goToWithPath = (routeName, payload = {}) => {
     const route = checkIsGoToRightPage(routeName)
 
     if (route && routerContext.setCurrentRouterName) {
-      routerContext.setCurrentRouterName(routeName)
+      const { isValidPath, newPath } = getAndFillDataToNewPath(
+        route.path,
+        payload
+      )
 
-      if (route.path) {
-        window.history.pushState({}, null, route.path)
+      if (route.path && isValidPath) {
+        window.history.pushState({}, null, newPath)
+      }
+
+      if (isValidPath) {
+        routerContext.setCurrentRouterName(routeName)
       }
     }
   }
